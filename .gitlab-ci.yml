@@ -1,0 +1,43 @@
+---
+image: 
+  name: tamimhemat/tamim-image:latest
+  pull_policy: if-not-present
+
+stages:
+- ".pre"
+- build_pylint_test
+- zip_artifacts
+- ".post"
+
+.build_template: &build_definition
+  - pip install -r requirements.txt
+
+.pythonlint_template: &pythonlint_definition
+  - pylint --fail-under=5.0 *.py
+
+.testcoverage_template: &testcoverage_definition
+  - chmod +x testing.sh
+  - ./testing.sh
+
+
+build_pylint_test:
+  stage: build_pylint_test
+  script:
+    - *build_definition
+    - *pythonlint_definition
+    - *testcoverage_definition
+  
+  artifacts:
+    when: always
+    reports:
+      junit:
+        - 'test-reports/*.xml'
+        - 'api-test-reports/*.xml'
+
+zip_artifacts:
+  stage: zip_artifacts
+  script:
+  - zip app.zip *.py
+  artifacts:
+    paths:
+    - app.zip
